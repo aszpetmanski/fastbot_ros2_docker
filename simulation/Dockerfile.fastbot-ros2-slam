@@ -1,0 +1,67 @@
+FROM ros:humble
+
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# -----------------------------
+# Install core tools + Gazebo + common ROS deps
+# -----------------------------
+RUN apt-get update && apt-get install -y \
+    python3-rosdep \
+    python3-colcon-common-extensions \
+    build-essential \
+    git \
+    gazebo \
+    ros-humble-gazebo-ros-pkgs \
+    ros-humble-xacro \
+    ros-humble-robot-state-publisher \
+    ros-humble-navigation2 \
+    ros-humble-nav2-bringup \
+    ros-humble-cartographer-ros \
+    ros-humble-cartographer-ros-msgs \
+    ros-humble-cartographer-rviz \
+    ros-humble-rviz2 \
+    ros-humble-teleop-twist-keyboard \
+    && rm -rf /var/lib/apt/lists/*
+
+# -----------------------------
+# Initialize rosdep
+# -----------------------------
+RUN rosdep init || true
+RUN rosdep update
+
+# -----------------------------
+# Create workspace
+# -----------------------------
+WORKDIR /ros2_ws/src
+
+# Copy required FastBot packages
+COPY src/fastbot/fastbot_slam ./fastbot_slam
+#COPY src/fastbot/fastbot_description ./fastbot_description
+
+# -----------------------------
+# Go to workspace root
+# -----------------------------
+WORKDIR /ros2_ws
+
+# Ensure apt is fresh before rosdep
+RUN apt-get update
+
+# Install remaining dependencies via rosdep
+RUN rosdep install --from-paths src --ignore-src -r -y
+
+# -----------------------------
+# Build workspace
+# -----------------------------
+RUN . /opt/ros/humble/setup.sh && colcon build
+
+# -----------------------------
+# Auto-source ROS + workspace in every new bash
+# -----------------------------
+RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc && \
+    echo 'source /ros2_ws/install/setup.bash' >> /root/.bashrc
+
+# -----------------------------
+# Default command: launch simulation
+# -----------------------------
+CMD ["bash", "-c", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && ros2 launch fastbot_slam cartographer.launch.py"]
