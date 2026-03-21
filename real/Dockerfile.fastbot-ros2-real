@@ -1,0 +1,49 @@
+FROM ros:humble
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    python3-rosdep \
+    python3-colcon-common-extensions \
+    build-essential \
+    git \
+    ros-humble-xacro \
+    ros-humble-camera-info-manager \
+    ros-humble-cv-bridge \
+    ros-humble-image-transport \
+    ros-humble-image-transport-plugins \
+    ros-humble-diagnostic-updater \
+    ros-humble-pcl-conversions \
+    ros-humble-joint-state-publisher \
+    ros-humble-teleop-twist-keyboard \
+    ros-humble-rmw-cyclonedds-cpp \
+    libboost-all-dev \
+    libpcl-dev \
+    libpcap-dev \
+    v4l-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN rosdep init || true
+RUN rosdep update
+
+WORKDIR /ros2_ws/src
+
+COPY fastbot/Lslidar_ROS2_driver ./Lslidar_ROS2_driver
+COPY fastbot/fastbot_bringup ./fastbot_bringup
+COPY fastbot/fastbot_description ./fastbot_description
+COPY fastbot/serial_motor ./serial_motor
+COPY fastbot/serial_motor_msgs ./serial_motor_msgs
+COPY fastbot/v4l2_camera ./v4l2_camera
+
+WORKDIR /ros2_ws
+
+RUN apt-get update
+RUN rosdep install --from-paths src --ignore-src -r -y
+
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build --symlink-install
+
+RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc && \
+    echo 'source /ros2_ws/install/setup.bash' >> /root/.bashrc
+
+CMD ["bash", "-c", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && ros2 launch fastbot_bringup bringup.launch.xml"]
