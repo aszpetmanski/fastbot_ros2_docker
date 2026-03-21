@@ -1,0 +1,65 @@
+FROM ros:humble
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    nginx \
+    python3-pip \
+    python3-rosdep \
+    python3-colcon-common-extensions \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir pyquaternion
+
+WORKDIR /ros2_ws/src
+
+COPY ros2_ws/src/rosbridge_suite ./rosbridge_suite
+COPY ros2_ws/src/tf2_web_republisher_py/tf2_web_republisher ./tf2_web_republisher
+COPY ros2_ws/src/tf2_web_republisher_py/tf2_web_republisher_py ./tf2_web_republisher_py
+
+RUN if [ -f /ros2_ws/src/rosbridge_suite/rosbridge_server/scripts/rosbridge_websocket.py ] && \
+      [ ! -f /ros2_ws/src/rosbridge_suite/rosbridge_server/scripts/rosbridge_websocket ]; then \
+      cp /ros2_ws/src/rosbridge_suite/rosbridge_server/scripts/rosbridge_websocket.py \
+         /ros2_ws/src/rosbridge_suite/rosbridge_server/scripts/rosbridge_websocket; \
+    fi && \
+    chmod +x /ros2_ws/src/rosbridge_suite/rosbridge_server/scripts/rosbridge_websocket.py && \
+    chmod +x /ros2_ws/src/rosbridge_suite/rosbridge_server/scripts/rosbridge_websocket
+
+WORKDIR /ros2_ws
+
+RUN rosdep init || true
+
+RUN . /opt/ros/humble/setup.sh && \
+    apt-get update && \
+    rosdep update && \
+    rosdep install \
+      --from-paths src \
+      --ignore-src \
+      -r -y \
+      --skip-keys="python3-pyquaternion" && \
+    colcon build \
+      --executor sequential \
+      --packages-skip tf2_web_republisher_py && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY webpage_ws/fastbot_webapp/ /usr/share/nginx/html/
+
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY ros2_ws/src/fastbot_ros2_docker/simulation/nginx.conf /etc/nginx/conf.d/default.conf
+
+RUN printf '%s\n' \
+'#!/bin/bash' \
+'set -x' \
+'source /opt/ros/humble/setup.bash' \
+'source /ros2_ws/install/setup.bash || true' \
+'export PYTHONPATH=/ros2_ws/src/tf2_web_republisher_py:$PYTHONPATH' \
+'ros2 launch rosbridge_server rosbridge_websocket_launch.xml &' \
+'python3 /ros2_ws/src/tf2_web_republisher_py/tf2_web_republisher_py/tf2_web_republisher_py.py &' \
+'exec nginx -g "daemon off;"' \
+> /start.sh && chmod +x /start.sh
+
+EXPOSE 80 9090
+
+CMD ["bash", "/start.sh"]
