@@ -2,9 +2,6 @@ version: '2.4'
 
 services:
   fastbot-ros2-gazebo:
-    build:
-      context: ../../..
-      dockerfile: src/fastbot_ros2_docker/simulation/Dockerfile.fastbot-ros2-gazebo
     image: alanszpetmanski/alan.szpetmanski-cp22:fastbot-ros2-gazebo
     container_name: fastbot-ros2-gazebo
     hostname: fastbot-ros2-gazebo
@@ -22,9 +19,6 @@ services:
       - fastbot-net
 
   fastbot-ros2-slam:
-    build:
-      context: ../../..
-      dockerfile: src/fastbot_ros2_docker/simulation/Dockerfile.fastbot-ros2-slam
     image: alanszpetmanski/alan.szpetmanski-cp22:fastbot-ros2-slam
     container_name: fastbot-ros2-slam
     hostname: fastbot-ros2-slam
@@ -43,9 +37,6 @@ services:
       - fastbot-net
 
   fastbot-ros2-webapp:
-    build:
-      context: ../../../..
-      dockerfile: ros2_ws/src/fastbot_ros2_docker/simulation/Dockerfile.fastbot-ros2-webapp
     image: alanszpetmanski/alan.szpetmanski-cp22:fastbot-ros2-webapp
     container_name: fastbot-ros2-webapp
     hostname: fastbot-ros2-webapp
