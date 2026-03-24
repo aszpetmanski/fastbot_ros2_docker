@@ -1,0 +1,50 @@
+FROM ros:humble
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ENV ROS_LOCALHOST_ONLY=0
+
+RUN apt-get update && apt-get install -y \
+    python3-rosdep \
+    python3-colcon-common-extensions \
+    build-essential \
+    git \
+    ros-humble-xacro \
+    ros-humble-robot-state-publisher \
+    ros-humble-joint-state-publisher \
+    ros-humble-tf2-ros \
+    ros-humble-tf2-tools \
+    ros-humble-rmw-cyclonedds-cpp \
+    ros-humble-cartographer \
+    ros-humble-cartographer-ros \
+    ros-humble-navigation2 \
+    ros-humble-nav2-bringup \
+    ros-humble-nav2-map-server \
+    ros-humble-nav2-amcl \
+    ros-humble-nav2-planner \
+    ros-humble-nav2-controller \
+    ros-humble-nav2-behaviors \
+    ros-humble-nav2-bt-navigator \
+    ros-humble-nav2-lifecycle-manager \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN rosdep init || true
+RUN rosdep update
+
+WORKDIR /ros2_ws/src
+
+COPY fastbot_slam ./fastbot_slam
+
+WORKDIR /ros2_ws
+
+RUN apt-get update && \
+    rosdep install --from-paths src --ignore-src --rosdistro humble -r -y && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build --symlink-install
+
+RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc && \
+    echo 'source /ros2_ws/install/setup.bash' >> /root/.bashrc
+
+CMD ["bash", "-c", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && ros2 launch fastbot_slam cartographer.launch.py"]

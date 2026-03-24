@@ -1,0 +1,31 @@
+version: "3.9"
+
+name: fastbot
+
+x-fastbot-common: &fastbot-common
+  network_mode: host
+  restart: unless-stopped
+  stdin_open: true
+  tty: true
+  environment:
+    ROS_LOCALHOST_ONLY: "${ROS_LOCALHOST_ONLY:-0}"
+    ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-0}"
+    RMW_IMPLEMENTATION: "${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}"
+
+services:
+  bringup:
+    <<: *fastbot-common
+    container_name: fastbot-bringup
+    image: alanszpetmanski/alan.szpetmanski-cp22:fastbot-ros2-real
+    privileged: true
+    devices:
+      - /dev/ttyUSB0:/dev/arduino_nano
+      - /dev/ttyACM0:/dev/lslidar
+      - /dev/video0:/dev/video0
+
+  slam:
+    <<: *fastbot-common
+    container_name: fastbot-slam
+    image: alanszpetmanski/alan.szpetmanski-cp22:fastbot-ros2-slam-real
+    depends_on:
+      - bringup

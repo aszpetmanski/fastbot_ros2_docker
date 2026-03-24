@@ -1,6 +1,9 @@
 FROM ros:humble
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO=humble
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ENV ROS_LOCALHOST_ONLY=0
 
 RUN apt-get update && apt-get install -y \
     python3-rosdep \
@@ -8,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     python3-serial \
     build-essential \
     git \
+    ros-humble-rmw-cyclonedds-cpp \
     ros-humble-xacro \
     ros-humble-camera-info-manager \
     ros-humble-cv-bridge \
@@ -37,8 +41,7 @@ COPY fastbot/v4l2_camera ./v4l2_camera
 
 WORKDIR /ros2_ws
 
-RUN apt-get update
-RUN rosdep install --from-paths src --ignore-src -r -y
+RUN apt-get update && rosdep install --from-paths src --ignore-src -r -y
 
 RUN . /opt/ros/humble/setup.sh && \
     colcon build --symlink-install
@@ -46,4 +49,4 @@ RUN . /opt/ros/humble/setup.sh && \
 RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc && \
     echo 'source /ros2_ws/install/setup.bash' >> /root/.bashrc
 
-CMD ["bash", "-c", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && ros2 launch fastbot_bringup bringup.launch.xml"]
+CMD ["bash", "-lc", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && ros2 launch fastbot_bringup bringup.launch.xml"]
