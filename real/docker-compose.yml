@@ -1,7 +1,5 @@
 version: "3.9"
 
-name: fastbot
-
 x-fastbot-common: &fastbot-common
   network_mode: host
   restart: unless-stopped
