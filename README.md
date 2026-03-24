@@ -101,6 +101,11 @@ Pull simulation images
 ```bash
 docker-compose pull
 ```
+Create a network
+```bash
+docker network create fastbot-net
+```
+
 Start the simulation stack
 ```bash
 docker-compose up
