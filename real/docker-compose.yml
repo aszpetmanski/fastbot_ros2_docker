@@ -27,3 +27,30 @@ services:
     image: alanszpetmanski/alan.szpetmanski-cp22:fastbot-ros2-slam-real
     depends_on:
       - bringup
+
+    volumes:
+      - ../run_cartographer_real.sh:/scripts/run_cartographer_real.sh:ro
+
+    environment:
+      ROS_LOCALHOST_ONLY: "${ROS_LOCALHOST_ONLY:-0}"
+      ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-0}"
+      RMW_IMPLEMENTATION: "${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}"
+
+      USE_SIM_TIME: "false"
+
+      ODOM_TOPIC: "/fastbot/odom"
+      SCAN_TOPIC: "/scan"
+
+      TRACKING_FRAME: "base_link"
+      PUBLISHED_FRAME: "base_link"
+      ODOM_FRAME: "fastbot_odom"
+
+      USE_ODOMETRY: "true"
+      PROVIDE_ODOM_FRAME: "true"
+
+      MAP_RESOLUTION: "0.05"
+      MAP_PUBLISH_PERIOD: "1.0"
+
+    command:
+      - bash
+      - /scripts/run_cartographer_real.sh
