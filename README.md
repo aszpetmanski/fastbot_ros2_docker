@@ -1,4 +1,3 @@
-README.md
 # FastBot ROS 2 — Docker Deployment (Simulation and Real Robot)
 
 This repository contains Docker-based setups for:
@@ -18,8 +17,8 @@ Repository structure
 
 After cloning, the relevant directories are:
 
-ros2_ws/src/fastbot_ros2_docker/simulation — simulation setup
-ros2_ws/src/fastbot_ros2_docker/real — real robot setup
+- ros2_ws/src/fastbot_ros2_docker/simulation — simulation setup
+- ros2_ws/src/fastbot_ros2_docker/real — real robot setup
 
 # 1. Download the repository
 
@@ -33,12 +32,12 @@ This repository must be available both:
 on the host used for simulation
 on the robot computer for the real robot setup
 # 2. General requirements
-Docker and Docker Compose
+## Docker and Docker Compose
 
 Both simulation and real robot setups require:
 
-Docker
-Docker Compose
+- Docker
+- Docker Compose
 
 Install them with:
 ```bash
@@ -48,8 +47,8 @@ sudo service docker start
 ```
 Check versions:
 ```bash
-docker --version
-docker-compose --version
+sudo docker --version
+sudo docker-compose --version
 ```
 Optional: allow Docker without sudo:
 ```bash
@@ -58,8 +57,8 @@ newgrp docker
 ```
 Verify:
 ```bash
-docker ps
-docker-compose version
+sudo docker ps
+sudo docker-compose version
 ```
 If this does not work immediately, log out and log back in.
 
@@ -92,27 +91,27 @@ Check display:
 echo $DISPLAY
 ```
 Typical value:
-
+```bash
 :0
-
+```
 If DISPLAY is empty, Gazebo will not open on screen.
 
 Pull simulation images
 ```bash
-docker-compose pull
+sudo docker-compose pull
 ```
 Create a network
 ```bash
-docker network create fastbot-net
+sudo docker network create fastbot-net
 ```
 
 Start the simulation stack
 ```bash
-docker-compose up
+sudo docker-compose up
 ```
 Detached mode:
 ```bash
-docker-compose up -d
+sudo docker-compose up -d
 ```
 This starts:
 
@@ -124,8 +123,8 @@ This starts:
 
 The web application exposes:
 
-7000:80
-9090:9090
+- 7000:80
+- 9090:9090
 
 So the frontend should be available at:
 
@@ -135,25 +134,25 @@ http://localhost:7000
 
 List running containers:
 ```bash
-docker ps
+sudo docker ps
 ```
 Open a shell inside the Gazebo container:
 ```bash
-docker exec -it fastbot-ros2-gazebo bash
+sudo docker exec -it fastbot-ros2-gazebo bash
 ```
 Open a shell inside the SLAM container:
 ```bash
-docker exec -it fastbot-ros2-slam bash
+sudo docker exec -it fastbot-ros2-slam bash
 ```
 Open a shell inside the WebApp container:
 ```bash
-docker exec -it fastbot-ros2-webapp bash
+sudo docker exec -it fastbot-ros2-webapp bash
 ```
 ## Control the simulated robot
 
 Enter the Gazebo container:
 ```bash
-docker exec -it fastbot-ros2-gazebo bash
+sudo docker exec -it fastbot-ros2-gazebo bash
 ```
 Run teleoperation:
 ```bash
@@ -171,25 +170,10 @@ Rotation example:
 ros2 topic pub --once /fastbot/cmd_vel geometry_msgs/msg/Twist \
 "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.5}}"
 ```
-Debugging simulation
 
-Logs for all services:
-```bash
-docker-compose logs
-```
-Follow logs live:
-```bash
-docker-compose logs -f
-```
-One service only:
-```bash
-docker-compose logs -f fastbot-ros2-gazebo
-docker-compose logs -f fastbot-ros2-slam
-docker-compose logs -f fastbot-ros2-webapp
-```
 Check ROS topics:
 ```bash
-docker exec -it fastbot-ros2-gazebo bash
+sudo docker exec -it fastbot-ros2-gazebo bash
 ros2 topic list
 ```
 Check if /cmd_vel exists:
@@ -202,21 +186,21 @@ ros2 topic echo /fastbot/odom
 ```
 Stop simulation
 ```bash
-docker-compose down
+sudo docker-compose down
 ```
 Remove volumes too:
 ```bash
-docker-compose down -v
+sudo docker-compose down -v
 ```
 Restart simulation
 ```bash
-docker-compose down
-docker-compose up
+sudo docker-compose down
+sudo docker-compose up
 ```
 Or detached:
 ```bash
-docker-compose down
-docker-compose up -d
+sudo docker-compose down
+sudo docker-compose up -d
 ```
 # 4. Real robot setup
 
@@ -230,12 +214,31 @@ On the robot computer, the following are required:
 
 - Docker installed
 - Docker Compose installed
+- ROS2 Humble installed on the robot with rmw_cyclonedds_cpp implementation
 - access to the repository
 - network connectivity
 - hardware devices available:
 - - /dev/ttyUSB0
 - - /dev/ttyACM0
 - - /dev/video0
+  - If your robot have custom device names for example: "/dev/arduino_nano" all you have to do is edit this part
+  ```bash
+
+  devices:
+      - /dev/ttyUSB0:/dev/arduino_nano
+      - /dev/ttyACM0:/dev/lslidar
+      - /dev/video0:/dev/video0
+  
+  ```
+
+  of docker-compose.yml accordingly:
+  ```
+  HOST device : CONTAINER device
+  devices:
+  - your_name:/dev/arduino_nano
+  - your_name:/dev/lslidar
+  - your_name:/dev/video0
+  ```
 
 ## The real robot setup uses two Docker images:
 
@@ -259,28 +262,30 @@ Because of this separation, the SLAM container does not need direct access to /d
 
 # Pull real robot images
 ```bash
-docker-compose pull
+sudo docker-compose pull
 ```
 Start the real robot stack
 ```bash
-docker-compose up
+sudo docker-compose up
 ```
 Detached mode:
 ```bash
-docker-compose up -d
+sudo docker-compose up -d
 ```
 This starts:
 
-fastbot-bringup
-fastbot-slam
+- fastbot-bringup
+- fastbot-slam
+
 Check that containers are running
 ```bash
-docker ps
+sudo docker ps
 ```
 Expected containers:
 
-fastbot-bringup
-fastbot-slam
+- fastbot-bringup
+- fastbot-slam
+
 Check that robot topics are available
 
 Run on the robot computer:
@@ -289,42 +294,35 @@ ros2 topic list
 ```
 The output should include at least:
 
-a laser topic, for example:
-/scan
-a camera topic, for example:
-/fastbot/image_raw
-a velocity command topic, for example:
-/fastbot/cmd_vel
+- a laser topic, for example:
+```/scan```
+
+- a camera topic, for example:
+```/fastbot/image_raw```
+
+- a velocity command topic, for example:
+```/fastbot/cmd_vel```
 
 Other expected topics may include:
 
-/fastbot/odom
-/tf
-/tf_static
-/map
+- /fastbot/odom
+- /tf
+- /tf_static
+- /map
 Useful commands for real robot
 
 See running containers:
 ```bash
-docker ps
+sudo docker ps
 ```
-See logs:
-```bash
-docker-compose logs
-docker-compose logs -f
-```
-Logs for one container:
-```bash
-docker-compose logs -f bringup
-docker-compose logs -f slam
-```
+
 Enter the bringup container:
 ```bash
-docker exec -it fastbot-bringup bash
+sudo docker exec -it fastbot-bringup bash
 ```
 Enter the slam container:
 ```bash
-docker exec -it fastbot-slam bash
+sudo docker exec -it fastbot-slam bash
 ```
 Check topics inside a container:
 ```bash
@@ -366,14 +364,14 @@ Turn it back on
 Log into the robot computer
 Check:
 ```bash
-docker ps
+sudo docker ps
 ros2 topic list
 ```
 The expected result is:
 
-fastbot-bringup is running
-fastbot-slam is running
-robot topics such as /scan, /fastbot/image_raw, and /fastbot/cmd_vel are available
+- fastbot-bringup is running
+- fastbot-slam is running
+- robot topics such as /scan, /fastbot/image_raw, and /fastbot/cmd_vel are available
 
 # 6. External computer access to the robot topics
 
@@ -405,7 +403,36 @@ source /opt/ros/humble/setup.bash
 export ROS_DOMAIN_ID=0
 export ROS_LOCALHOST_ONLY=0
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+ros2 daemon stop
+ros2 daemon start
+ros2 topic list
 ```
+
+Make it permanent:
+
+```bash
+sed -i '/ROS_DOMAIN_ID/d' ~/.bashrc
+sed -i '/ROS_LOCALHOST_ONLY/d' ~/.bashrc
+sed -i '/RMW_IMPLEMENTATION/d' ~/.bashrc
+
+cat <<'EOF' >> ~/.bashrc
+
+# Fastbot ROS 2 network config
+source /opt/ros/humble/setup.bash
+export ROS_DOMAIN_ID=0
+export ROS_LOCALHOST_ONLY=0
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+EOF
+
+source ~/.bashrc
+```
+Verify:
+
+```bash
+printenv | grep -E 'ROS|RMW'
+```
+
 Verify topic visibility from the external computer
 
 Run:
@@ -454,25 +481,8 @@ rviz2
 ```
 Inside RViz2, add the following displays as needed:
 
-Map
-LaserScan
-TF
-RobotModel
-
-Typical topics:
-
-Map topic:
-/map
-Laser topic:
-/scan
-TF:
-/tf
-/tf_static
-
-Set the fixed frame according to the robot setup, typically something like:
-
-map
-odom
-or base_link
+- Map
+- LaserScan
+- TF
 
 If RViz2 does not open and shows a display/X11-related error, make sure you are running it in a valid graphical desktop session.
